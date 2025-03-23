@@ -1,0 +1,14 @@
+targets:
+  $default:
+    builders:
+      translate_dictionary_builder|translate_dictionary:
+        enabled: true
+
+builders:
+  translate_dictionary:
+    import: "package:translate_dictionary_builder/builder.dart"
+    builder_factories: ["translateDictionaryBuilder"]
+    build_extensions: {".dart": ["translate_dictionary.g.part"]}
+    auto_apply: dependents
+    build_to: cache
+    applies_builders: [ "source_gen|combining_builder" ]
