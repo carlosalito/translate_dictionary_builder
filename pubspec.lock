@@ -131,6 +131,15 @@ packages:
     description: flutter
     source: sdk
     version: "0.0.0"
+  flutter_translate:
+    dependency: "direct main"
+    description:
+      path: "."
+      ref: main
+      resolved-ref: "47acdbd170cfa5d19e24f480a05436e22ed195e8"
+      url: "https://github.com/carlosalito/flutter_translate.git"
+    source: git
+    version: "0.0.1"
   glob:
     dependency: transitive
     description:
@@ -288,15 +297,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.7.4"
-  translate_dictionary_annotation:
-    dependency: "direct main"
-    description:
-      path: "."
-      ref: main
-      resolved-ref: "2cd9b2326711a6f7874fa1ffbc92eed85a8441b5"
-      url: "https://github.com/carlosalito/translate_dictionary_annotation.git"
-    source: git
-    version: "0.0.1"
   typed_data:
     dependency: transitive
     description:
@@ -339,4 +339,4 @@ packages:
     version: "3.1.3"
 sdks:
   dart: ">=3.7.0 <4.0.0"
-  flutter: ">=3.18.0-18.0.pre.54"
+  flutter: ">=3.29.0"

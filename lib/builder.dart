@@ -1,8 +1,8 @@
 import 'dart:io';
 
 import 'package:build/build.dart';
+import 'package:flutter_translate/translate_annotation.dart';
 import 'package:source_gen/source_gen.dart';
-import 'package:translate_dictionary_annotation/translate_annotation.dart';
 import 'package:yaml/yaml.dart';
 
 class TranslateDictionaryGenerator extends Generator {
