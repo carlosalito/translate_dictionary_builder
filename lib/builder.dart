@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:build/build.dart';
 import 'package:flutter_translate/translate_annotation.dart';
 import 'package:source_gen/source_gen.dart';
@@ -24,12 +22,15 @@ class TranslateDictionaryGenerator extends Generator {
 
   @override
   Future<String> generate(LibraryReader library, BuildStep buildStep) async {
-    final String yamlPath = options.config['yaml_path'] as String? ?? 'assets/i18n/pt_Br.yaml';
-    final File yamlFile = File(yamlPath);
+    final String yamlRelativePath = options.config['yaml_path'] as String? ?? 'assets/i18n/pt_Br.yaml';
 
-    if (!yamlFile.existsSync()) {
-      log.warning('Arquivo YAML não encontrado: $yamlPath');
-      return '';
+    final AssetId yamlAssetId = AssetId(buildStep.inputId.package, yamlRelativePath);
+
+    if (!await buildStep.canRead(yamlAssetId)) {
+      log.warning(
+        'Arquivo YAML não encontrado no caminho esperado para o pacote ${buildStep.inputId.package}: ${yamlAssetId.uri}',
+      );
+      return ''; // Retorna uma string vazia, pois não há dicionário para gerar.
     }
 
     const TypeChecker typeChecker = TypeChecker.fromRuntime(GenerateTranslateDictionary);
@@ -39,11 +40,12 @@ class TranslateDictionaryGenerator extends Generator {
       return '';
     }
 
-    final Object className = annotatedClasses.first.annotation.read('className').literalValue ?? 'TranslateDict';
-    final String yamlString = yamlFile.readAsStringSync();
+    final String yamlString = await buildStep.readAsString(yamlAssetId);
     final dynamic yamlMap = loadYaml(yamlString);
 
-    final List<String> classDefinitions = <String>[];
+    final Object className = annotatedClasses.first.annotation.read('className').literalValue ?? 'TranslateDict';
+    final List<String> classDefinitions = <String>[]; // Lista para armazenar as definições de classes aninhadas.
+
     final String rootClass = _generateClasses(yamlMap, classDefinitions, rootClassName: className.toString());
 
     return '''
