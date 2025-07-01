@@ -10,5 +10,5 @@ builders:
     builder_factories: ["translateDictionaryBuilder"]
     build_extensions: {".dart": ["translate_dictionary.g.part"]}
     auto_apply: dependents
-    build_to: cache
+    build_to: source
     applies_builders: [ "source_gen|combining_builder" ]
