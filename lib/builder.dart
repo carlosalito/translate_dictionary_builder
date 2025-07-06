@@ -1,5 +1,6 @@
 import 'package:build/build.dart';
 import 'package:flutter_translate/translate_annotation.dart';
+import 'package:glob/glob.dart';
 import 'package:source_gen/source_gen.dart';
 import 'package:yaml/yaml.dart';
 
@@ -22,29 +23,37 @@ class TranslateDictionaryGenerator extends Generator {
 
   @override
   Future<String> generate(LibraryReader library, BuildStep buildStep) async {
-    final String yamlRelativePath = options.config['yaml_path'] as String? ?? 'assets/i18n/pt_Br.yaml';
+    final String yamlBasePath = options.config['yaml_path'] as String? ?? 'assets/i18n';
 
-    final AssetId yamlAssetId = AssetId(buildStep.inputId.package, yamlRelativePath);
+    final List<AssetId> allAssets = await buildStep.findAssets(Glob('$yamlBasePath/*.yaml')).toList();
 
-    if (!await buildStep.canRead(yamlAssetId)) {
-      log.warning(
-        'Arquivo YAML não encontrado no caminho esperado para o pacote ${buildStep.inputId.package}: ${yamlAssetId.uri}',
-      );
-      return ''; // Retorna uma string vazia, pois não há dicionário para gerar.
+    if (allAssets.isEmpty) {
+      log.warning('No .yaml file found in $yamlBasePath');
+      return '';
     }
 
-    const TypeChecker typeChecker = TypeChecker.fromRuntime(GenerateTranslateDictionary);
-    final Iterable<AnnotatedElement> annotatedClasses = library.annotatedWith(typeChecker);
+    allAssets.sort((a, b) => _priorityScore(a).compareTo(_priorityScore(b)));
+    final AssetId selectedYaml = allAssets.first;
+
+    if (!await buildStep.canRead(selectedYaml)) {
+      log.warning('Cannot read selected YAML file: ${selectedYaml.path}');
+      return '';
+    }
+
+    const typeChecker = TypeChecker.fromRuntime(GenerateTranslateDictionary);
+    final annotatedClasses = library.annotatedWith(typeChecker);
 
     if (annotatedClasses.isEmpty) {
       return '';
     }
 
-    final String yamlString = await buildStep.readAsString(yamlAssetId);
+    log.warning('Reading $selectedYaml file as a model to generate dictionary');
+
+    final yamlString = await buildStep.readAsString(selectedYaml);
     final dynamic yamlMap = loadYaml(yamlString);
 
     final Object className = annotatedClasses.first.annotation.read('className').literalValue ?? 'TranslateDict';
-    final List<String> classDefinitions = <String>[]; // Lista para armazenar as definições de classes aninhadas.
+    final List<String> classDefinitions = <String>[];
 
     final String rootClass = _generateClasses(yamlMap, classDefinitions, rootClassName: className.toString());
 
@@ -55,6 +64,15 @@ class $className {
 
 ${classDefinitions.join('\n')}
 ''';
+  }
+
+  int _priorityScore(AssetId asset) {
+    final String filename = asset.pathSegments.last.toLowerCase();
+    if (filename.startsWith('pt') && filename.endsWith('.yaml')) return 0;
+    if (filename.startsWith('en') && filename.endsWith('.yaml')) return 1;
+    if (filename.startsWith('es') && filename.endsWith('.yaml')) return 2;
+    if (filename.endsWith('.yaml')) return 3;
+    return 99;
   }
 
   String _generateClasses(
