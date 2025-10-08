@@ -1,5 +1,4 @@
 import 'package:build/build.dart';
-import 'package:flutter_translate/translate_annotation.dart';
 import 'package:glob/glob.dart';
 import 'package:source_gen/source_gen.dart';
 import 'package:yaml/yaml.dart';
@@ -40,7 +39,9 @@ class TranslateDictionaryGenerator extends Generator {
       return '';
     }
 
-    const typeChecker = TypeChecker.fromRuntime(GenerateTranslateDictionary);
+    const typeChecker = TypeChecker.fromUrl(
+      'package:flutter_translate/translate_annotation.dart#GenerateTranslateDictionary',
+    );
     final annotatedClasses = library.annotatedWith(typeChecker);
 
     if (annotatedClasses.isEmpty) {
