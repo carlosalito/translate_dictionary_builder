@@ -24,7 +24,12 @@ class TranslateDictionaryGenerator extends Generator {
   Future<String> generate(LibraryReader library, BuildStep buildStep) async {
     final String yamlBasePath = options.config['yaml_path'] as String? ?? 'assets/i18n';
 
-    final List<AssetId> allAssets = await buildStep.findAssets(Glob('$yamlBasePath/*.yaml')).toList();
+    final packageName = buildStep.inputId.package;
+    final List<AssetId> allAssets =
+        await buildStep
+            .findAssets(Glob('assets/i18n/*.yaml', recursive: false))
+            .where((asset) => asset.package == packageName)
+            .toList();
 
     if (allAssets.isEmpty) {
       log.warning('No .yaml file found in $yamlBasePath');
